@@ -172,10 +172,7 @@ void imprimirPosicionamientoBarco(int tableroJuego[100]){
 		cout << endl <<"----------------------------------------------------------------" << endl;
 	}
 
-	/*
- * Se encarga de determinar si el juego debe continuar dado un mensaje que contiene las respuestas de ambos jugadores y
- * muestra mensajes dependiendo de cada caso.
- * */
+//se ve que la posicion ingresada se encuentre dentro del arreglo
 bool verificarRango(int posicion){
 	if(posicion < 0 || posicion > 100){
 		cout << "Ingrese una posicion correcta" << endl;
@@ -184,6 +181,7 @@ bool verificarRango(int posicion){
 	 return true;
 }
 
+//verifica si puede ingresar un barco en caso de que exista otro en un lugar a ocupar, o si se escapa de los limites del arreglo
 bool verificarPosicion(int orientacion, int tableroJuego[100], int posicion, int n){
 	//vertical
 	if(orientacion == 1){
@@ -196,6 +194,7 @@ bool verificarPosicion(int orientacion, int tableroJuego[100], int posicion, int
 		}
 		return true;
 	}
+	//horizontal
 	if(orientacion == 2){
 		int j = 0;
 		for (int i = 0; i < n; i++ ){
@@ -204,9 +203,11 @@ bool verificarPosicion(int orientacion, int tableroJuego[100], int posicion, int
 		}
 		return true;
 	} 
+	//no es ininguna opcion valida
 	return false;
 }
 
+//se posicionan los barcos en el arreglo
 string posicionarBarcos(){
 
 	int tablero[100];
@@ -363,9 +364,8 @@ string posicionarBarcos(){
 	return ss.str();
 }
 
-/*
- * Se encarga de obtener los mensajes de cada jugador respecto a si quieren que el juego continue
- * */
+//Se encarga de obtener los mensajes de cada jugador respecto a si quieren que el juego continue cuando la partida termina
+
 void preguntarContinuaElJuego(string &opcion){
 	do{
 		cout << "¿Desea seguir jugando?" << endl << "1.-Si" << endl << "2.-No" << endl << "Ingrese una opcion: ";
@@ -379,10 +379,8 @@ void preguntarContinuaElJuego(string &opcion){
 
 
 
-/*
- * Se lee un mensaje del descriptor y se guarda en un string
- * */
-int leerMensaje(int descriptor, string &mensajeRecibido){
+//Se lee un mensaje del descriptor y se guarda en un string
+ int leerMensaje(int descriptor, string &mensajeRecibido){
 	char buffer[500];
 	if(read(descriptor, buffer, 500) == -1){
 			cout << "Error 5: No se puede leer del descriptor" << endl;
@@ -391,16 +389,12 @@ int leerMensaje(int descriptor, string &mensajeRecibido){
 	mensajeRecibido=buffer;
 	return 0;
 }
-/*
- * Se envia un mensaje por el descriptor
- * 
- **/
+// Se envia un mensaje por el descriptor
+
 void enviarMensaje(int descriptorCliente, string mensaje){
 	write(descriptorCliente, mensaje.c_str(), 500);
 }
-/*
- * Se solicita la ip del servidor
- * */
+//Se solicita la ip del servidor
 void solicitarIp(string &ip){
 		cout << "Ingrese direccion IP del servidor: ";
 		cin >> ip;
@@ -415,13 +409,14 @@ void solicitarPosicion(string tableroJuego,string &posicion, int numeroJugador){
 			if(validarPosicion(tableroJuego, posicion) == true) break;
 		}while(true);
 }
-/*
- * Se valida la posicion ingresada por el usuario
- * */
+// Se valida el disparo hacia el otro tablero
+
 bool validarPosicion(string tableroJuego, string posicion){
 	
 	vector<string> elementos;
+	//borra el salto del linea
 	tableroJuego.erase(remove(tableroJuego.begin(), tableroJuego.end(), '\n'), tableroJuego.end());
+	//se obtiene un el tablero 
 	split(tableroJuego,'?', elementos);
 	int i = 0;
 	for(i=0;i<(int)elementos.size();i++){	
@@ -431,10 +426,8 @@ bool validarPosicion(string tableroJuego, string posicion){
 	cout << "Mensaje: Posicion ocupada o invalida"<<endl;
 	return false;
 }
-/*
- * Se corta un string dado un delimitador y se guarda en un vector de string
- * 
- * */
+//Se corta un string dado un delimitador y se guarda en un vector de string
+
 void split(string s, char delim, vector<string> &elementos) {
     stringstream ss(s);
     string item;
@@ -443,6 +436,7 @@ void split(string s, char delim, vector<string> &elementos) {
     }
 }
 
+//se muestra el tablero
 void mostrarTableroJuegoPropio(string tableroJuego){
 	vector<string> elementos;
 	tableroJuego.erase(remove(tableroJuego.begin(), tableroJuego.end(), '\n'), tableroJuego.end());

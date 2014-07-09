@@ -52,7 +52,7 @@ int puerto=5009;
 int main(int argc,char **argv)
 {
 	int descriptor = 0,  descriptorCliente1 = 0,  descriptorCliente2 = 0;
-	
+	//se establece la conexion
 	if(establecer_conexion(descriptor, descriptorCliente1, descriptorCliente2) != 0){
 		cout  << "TimeStamp["<<time(NULL)<<"]: Error: Ha ocurrido un error en la conexion" << endl;
 		return 0;
@@ -67,9 +67,9 @@ int main(int argc,char **argv)
 
 	leerMensaje(descriptorCliente1, mensajeLeido1);
 	leerMensaje(descriptorCliente2, mensajeLeido2);
-
+	// se inicializan los tableros para comenzar a jugar
 	inicializarTableros(tableroJuego1, tableroJuego2, mensajeLeido1, mensajeLeido2);
-
+	//
 	mostrarTablero(tableroJuego1);
 	mostrarTablero(tableroJuego2);
 
@@ -77,16 +77,17 @@ int main(int argc,char **argv)
 
 	while(jugando){
 
-		// se envian los tableros en formato de string
+		// se envian los tableros en formato de string a los jugadores
+		//tablero del jugador 1
 		crearStringTableroJuegoPropio(tableroJuego1, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente1, mensajeEnviar);
-
+		//tablero del  jugador 2
 		crearStringTableroJuegoPropio(tableroJuego2, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
-
+		//se le envia el tablero del contrincante al jugador 1
 		crearStringTableroJuegoDelOtro(tableroJuego2, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente1, mensajeEnviar);
-
+		//se le envia el tablero del contrincante al jugador 2
 		crearStringTableroJuegoDelOtro(tableroJuego1, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
 
@@ -95,9 +96,10 @@ int main(int argc,char **argv)
 		leerMensaje(descriptorCliente2, mensajeLeido2);
 
 		realizarJugada(tableroJuego1,  tableroJuego2,  mensajeLeido1,  mensajeLeido2);
-
+		//luego de realizar se revisa si es que hay un ganador
 		ganador = hayGanador(tableroJuego1, tableroJuego2);
 
+		//en caso de que haya empate se considera ganador = 3
 		if (ganador == 3){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "0");
 			leerMensaje(descriptorCliente1, mensajeLeido1);
@@ -116,6 +118,7 @@ int main(int argc,char **argv)
 				mostrarTablero(tableroJuego2);
 			}
 			
+		//en caso de que haya ganado el jugador 1
 		}else if (ganador == 1){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "1");
 			leerMensaje(descriptorCliente1, mensajeLeido1);
@@ -134,7 +137,7 @@ int main(int argc,char **argv)
 				mostrarTablero(tableroJuego2);
 			}
 			// 1 gana
-			
+		//en caso de que haya ganado el jugador 2
 		}else if (ganador == 2){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "2");
 			// 2 gana
@@ -169,7 +172,7 @@ int main(int argc,char **argv)
 	cout << "TimeStamp["<<time(NULL) << "]: El juego ha terminado" << endl;
 }
 
-
+//se revisa todo el tablero revisando si es que no hay ningun barco vivo
 int hayGanador(int tableroJuego1[100], int tableroJuego2[100]){
 
 	int muertoBotePatrulla1, muertoDestructor1, muertoSubmarino1, muertoBarcoBatalla1, muertoPortaAviones1;
@@ -206,11 +209,10 @@ int hayGanador(int tableroJuego1[100], int tableroJuego2[100]){
 }
 
 
-/*
- * Se realiza una jugada se reciben las 2 posiciones que colocaron los jugadores y los contadores de globos se actualiza el 
- * tablero y se muestran mensajes en el servidor 
- */
+// Se ve si es que la jugada realizada por el usuario ha impactado algún barco
+ 
 void realizarJugada(int tableroJuego1[100], int tableroJuego2[100],  string mensajeLeido1, string mensajeLeido2){
+		//se transforma la jugada a int
 		int posicion1 = atoi(mensajeLeido1.c_str()) - 1;
 		int posicion2 = atoi(mensajeLeido2.c_str()) - 1;
 
@@ -229,9 +231,7 @@ void realizarJugada(int tableroJuego1[100], int tableroJuego2[100],  string mens
 			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha fallado en la posicion"<< posicion1 << endl;
 		}
 }
-/*
- * Se lee un mensaje que llegue en un descriptor que este utilizando el servidor
- * */
+//se lee un mensaje de tamaño máximo 500, y en caso de que no se pueda leer el descriptor se envia error: problemas asociados al SO
 int leerMensaje(int descriptor, string &mensajeRecibido){
 	char buffer[500];
 	memset(buffer,0,500);
@@ -242,31 +242,22 @@ int leerMensaje(int descriptor, string &mensajeRecibido){
 	mensajeRecibido=buffer;
 	return 0;
 }
-/*
- * Se envia un mensaje mediante un descriptor
- * */
+// se envia mensaje de tamaño máximo 500 a un jugador indicando su descriptor
 void enviarMensajeUnJugador(int descriptor, string mensaje){
 	write(descriptor, mensaje.c_str(), 500);
 }
-/*
- * Se envia dos mensajes distintosr dos descriptores distintos
- *  */
+//se envia un mensaje distinto a los dos jugadores
 void enviarMensajeDosJugadores(int descriptor1,int descriptor2, string mensaje1, string mensaje2){
 	write(descriptor1, mensaje1.c_str(), 500);
 	write(descriptor2, mensaje2.c_str(), 500);
 }
-/*
- *  Se envia el mismo mensaje por dos descriptores distintos
- */
+//se envia el mismo mensaje a los dos jugadores
 void enviarMensajeDosJugadores(int descriptor1,int descriptor2, string mensaje){
 	write(descriptor1, mensaje.c_str(), 500);
 	write(descriptor2, mensaje.c_str(), 500);
 }
 
-/*
- * Se corta un string dado un delimitador y se guarda en un vector de string
- * 
- * */
+//corta un string basandose en un delimitador
 void split(string s, char delim, vector<string> &elementos) {
     stringstream ss(s);
     string item;
@@ -275,6 +266,7 @@ void split(string s, char delim, vector<string> &elementos) {
     }
 }
 
+//se inicializan los tablero a partir de un string 
 void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string mensaje1, string mensaje2){
 
 	vector<string> elementos1;
@@ -286,19 +278,20 @@ void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string 
 	vector<string>::iterator it;
 	int i = 0;
 	for( it = elementos1.begin(); it != elementos1.end(); ++it){
-
+			//se pasa el string a enteros 
 			tableroJuego1[i] = atoi((*it).c_str());
 			i++;
 	}
 	i = 0;
 	for( it = elementos2.begin(); it != elementos2.end(); ++it){
+			//se pasa el string a enteros
 			tableroJuego2[i] = atoi((*it).c_str());
 			i++;
 	}
 
 }
 
-
+//reviso el tablero viendo si queda algun barco indicado vivo
 int barcoMuerto(int tableroJuego[100], int barco){
 	for (int i = 0; i < 100 ; i ++){
 		if( tableroJuego[i] == barco) return 1;
@@ -306,16 +299,20 @@ int barcoMuerto(int tableroJuego[100], int barco){
 	return 0;
 }
 
-/*
- * Se crea un string el cual representa al tablero de juego que es enviado a los clientes.
- * */
+
+  //Se crea un string el cual representa al tablero de juego que es enviado a los clientes.
+
 void crearStringTableroJuegoPropio(int tableroJuego[100], string &aux){
 	int i;
 	aux = "";
 	for(i = 0 ; i<100;i++){
+			//disparo errado por jugador 1
 			if(tableroJuego[i] == DISPARO_J1) aux.append("X?");
+			//disparo errado por jugador 2
 			if(tableroJuego[i] == DISPARO_J2) aux.append("X?");
+			//disparo acertado por jugador 1
 			if(tableroJuego[i] == ACIERTO_J1) aux.append("O?");
+			//disparo acertado por jugador 2
 			if(tableroJuego[i] == ACIERTO_J2) aux.append("O?");
 			if(tableroJuego[i] == BOTE_PATRULLA) aux.append("P?");
 			if(tableroJuego[i] == SUBMARINO) aux.append("S?");
@@ -330,7 +327,7 @@ void crearStringTableroJuegoPropio(int tableroJuego[100], string &aux){
 	aux.append("\n");
 }
 
-
+//se muestran los aciertos y fallas en el tablero enemigo
 void crearStringTableroJuegoDelOtro(int tableroJuego[100], string &aux){
 	int i;
 	aux = "";
@@ -352,18 +349,14 @@ void crearStringTableroJuegoDelOtro(int tableroJuego[100], string &aux){
 	aux.append("\n");
 }
 
-/*
- * Se convierte un entero en int
- * */
+//se convierte un entero a string
 string convertirIntToString(int i){
 	stringstream ss;
 	ss << i;
 	return ss.str();
 }
-/*
- * Se muestra el tablero de juego como mensaje en el servidor
- * 
- * */
+//Se muestra el tablero de juego como mensaje en el servidor
+ 
 void mostrarTablero(int tableroJuego[100]){
 
 		unsigned int i;
@@ -394,9 +387,8 @@ void mostrarTablero(int tableroJuego[100]){
 		cout << endl <<"----------------------------------------------------------------" << endl;
 }
 
-/*
- * Funcion que se encarga de realizar la conexion con dos clientes.
- * */
+// Funcion que se encarga de realizar la conexion con dos clientes.
+ 
 int establecer_conexion(int &descriptor, int &descriptorCliente1, int &descriptorCliente2){
 //SE ABRE EL DESCRIPTOR DEL SOCKET(SE CREA EL SOCKET)
 	struct sockaddr_in direccion, cliente1, cliente2; 
