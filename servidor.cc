@@ -17,18 +17,23 @@
 using namespace std;
 
 void inicializarTablero(vector<int> &);
-void mostrarTablero(vector<int> );
+void mostrarTablero(int[100] );
 int establecer_conexion(int &, int &, int &);
 int leerMensaje(int, string &);
 void enviarMensajeUnJugador(int , string );
 void enviarMensajeDosJugadores(int ,int , string , string );
 void enviarMensajeDosJugadores(int ,int , string );
 void crearStringTableroJuego(vector<int> , string &);
-void realizarJugada(vector<int> &, string , string , int &, int &);
+void realizarJugada(int t1[100],int t2[100], string , string );
 void mostrarMensajeTriunfo(int , int );
 string convertirIntToString(int );
 bool quedanGlobos(vector<int> );
 int numeroAleatorio();
+void split(string s, char delim, vector<string> &elementos) ;
+void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string mensaje1, string mensaje2);
+void crearStringTableroJuegoPropio(int tableroJuego[100], string &aux);
+void crearStringTableroJuegoDelOtro(int tableroJuego[100], string &aux);
+int barcoMuerto(int tableroJuego[100], int barco);
 int puerto=5009;
 
 /*
@@ -42,6 +47,17 @@ int puerto=5009;
 #define DARDO_MISMO_LUGAR -4
 #define GLOBO_REVENTADO -5
 
+#define VACIO 0
+#define BOTE_PATRULLA -1
+#define DESTRUCTOR -2
+#define SUBMARINO -3
+#define BARCO_BATALLA -4
+#define PORTA_AVIONES -5 
+#define DISPARO_J1 -6
+#define DISPARO_J2 -7
+#define ACIERTO_J1 -8
+#define ACIERTO_J2 -9
+
 
 int main(int argc,char **argv)
 {
@@ -51,14 +67,97 @@ int main(int argc,char **argv)
 		cout  << "TimeStamp["<<time(NULL)<<"]: Error: Ha ocurrido un error en la conexion" << endl;
 		return 0;
 	}
-	vector<int> tableroJuego(25);
-	inicializarTablero(tableroJuego);
-	
+	int tableroJuego1[100];
+	int tableroJuego2[100];
+
 	string mensajeEnviar(""), mensajeLeido, mensajeLeido1, mensajeLeido2;
 	int contadorGlobosJ1=0, contadorGlobosJ2=0;
 	bool jugando = true;
 	// Se envian los numeros de los jugadores
 	enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "1","2");
+
+	leerMensaje(descriptorCliente1, mensajeLeido1);
+	leerMensaje(descriptorCliente2, mensajeLeido2);
+
+	inicializarTableros(tableroJuego1, tableroJuego2, mensajeLeido1, mensajeLeido2);
+
+	mostrarTablero(tableroJuego1);
+	mostrarTablero(tableroJuego2);
+
+	int muertoBotePatrulla1;
+	int muertoDestructor1;
+	int muertoSubmarino1;
+	int muertoBarcoBatalla1;
+	int muertoPortaAviones1;
+
+	int muertoBotePatrulla2;
+	int muertoDestructor2;
+	int muertoSubmarino2;
+	int muertoBarcoBatalla2;
+	int muertoPortaAviones2;
+
+	int ganador1;
+	int ganador2;
+
+	while(jugando){
+
+		// se envian los tableros en formato de string
+		crearStringTableroJuegoPropio(tableroJuego1, mensajeEnviar);
+		enviarMensajeUnJugador(descriptorCliente1, mensajeEnviar);
+
+		crearStringTableroJuegoPropio(tableroJuego2, mensajeEnviar);
+		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
+
+		crearStringTableroJuegoDelOtro(tableroJuego1, mensajeEnviar);
+		enviarMensajeUnJugador(descriptorCliente1, mensajeEnviar);
+
+		crearStringTableroJuegoDelOtro(tableroJuego2, mensajeEnviar);
+		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
+
+		// se reciben las jugadas
+
+		leerMensaje(descriptorCliente1, mensajeLeido1);
+		leerMensaje(descriptorCliente2, mensajeLeido2);
+
+		realizarJugada(tableroJuego1,  tableroJuego2,  mensajeLeido1,  mensajeLeido2);
+
+		muertoBotePatrulla1 = barcoMuerto(tableroJuego1, BOTE_PATRULLA);
+		muertoDestructor1 = barcoMuerto(tableroJuego1, DESTRUCTOR);
+		muertoSubmarino1 = barcoMuerto(tableroJuego1, SUBMARINO);
+		muertoBarcoBatalla1 = barcoMuerto(tableroJuego1, BARCO_BATALLA);
+		muertoPortaAviones1 = barcoMuerto(tableroJuego1, PORTA_AVIONES);
+
+		muertoBotePatrulla2 = barcoMuerto(tableroJuego2, BOTE_PATRULLA);
+		muertoDestructor2 = barcoMuerto(tableroJuego2, DESTRUCTOR);
+		muertoSubmarino2 = barcoMuerto(tableroJuego2, SUBMARINO);
+		muertoBarcoBatalla2 = barcoMuerto(tableroJuego2, BARCO_BATALLA);
+		muertoPortaAviones2 = barcoMuerto(tableroJuego2, PORTA_AVIONES);
+
+		ganador1 = muertoBotePatrulla1 + muertoDestructor1 + muertoSubmarino1 + muertoBarcoBatalla1 + muertoPortaAviones1;
+		ganador2 = muertoBotePatrulla2 + muertoDestructor2 + muertoSubmarino2 + muertoBarcoBatalla2 + muertoPortaAviones2;
+
+		if (ganador1 == 0 && ganador2 == 0){
+			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "0");
+			
+		}else if (ganador1 == 0){
+			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "1");
+			// 1 gana
+			
+		}else if (ganador2 == 0){
+			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "2");
+			// 2 gana
+			
+		}else{
+			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "3");
+		}
+
+
+
+	}
+
+
+	/*
+
 	while(jugando){
 		
 		mostrarTablero(tableroJuego);
@@ -102,6 +201,10 @@ int main(int argc,char **argv)
 			
 		}
 	}
+
+
+*/
+
 	// Se cierran los desriptores y se termina el juego.
 	close(descriptor);
 	close(descriptorCliente1);
@@ -139,116 +242,158 @@ bool quedanGlobos(vector<int> tableroJuego){
  * Se realiza una jugada se reciben las 2 posiciones que colocaron los jugadores y los contadores de globos se actualiza el 
  * tablero y se muestran mensajes en el servidor 
  */
-void realizarJugada(vector<int> &tableroJuego, string mensajeLeido1, string mensajeLeido2, int &contadorGlobosJ1, int &contadorGlobosJ2){
+void realizarJugada(int tableroJuego1[100], int tableroJuego2[100],  string mensajeLeido1, string mensajeLeido2){
 		int posicion1 = atoi(mensajeLeido1.c_str()) - 1;
 		int posicion2 = atoi(mensajeLeido2.c_str()) - 1;
-		
-		if(posicion1 == posicion2){
-			if(tableroJuego[posicion1] == VACIO){
-				tableroJuego[posicion1] = DARDO_MISMO_LUGAR;
-			}
-			if (tableroJuego[posicion1] == GLOBO){ 
-				tableroJuego[posicion1] = GLOBO_REVENTADO;
-				cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha reventado un globo" << endl;
-				cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha reventado un globo" << endl;
-				contadorGlobosJ1++;
-				contadorGlobosJ2++;		
-			}
+
+		if (tableroJuego1[posicion1] == BOTE_PATRULLA || tableroJuego1[posicion1] == DESTRUCTOR || tableroJuego1[posicion1] == SUBMARINO || tableroJuego1[posicion1] == BARCO_BATALLA || tableroJuego1[posicion1] == PORTA_AVIONES){
+			tableroJuego1[posicion1] = ACIERTO_J1;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha acertado" << endl;
 		}else{
-			if(tableroJuego[posicion1] == GLOBO){
-				contadorGlobosJ1++;
-				cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha reventado un globo" << endl;
-				tableroJuego[posicion1] = GLOBO_REVENTADO;
-			}
-			if(tableroJuego[posicion2] == GLOBO){
-				contadorGlobosJ2++;
-				cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha reventado un globo" << endl;
-				tableroJuego[posicion2] = GLOBO_REVENTADO;
-			}
-			if(tableroJuego[posicion1] == VACIO){
-				tableroJuego[posicion1] = JUGADOR_1;
-			}
-			if(tableroJuego[posicion2] == VACIO){
-				tableroJuego[posicion2] = JUGADOR_2;
-			}
+			tableroJuego1[posicion1] = DISPARO_J1;
+		}
+		if (tableroJuego2[posicion2] == BOTE_PATRULLA || tableroJuego2[posicion2] == DESTRUCTOR || tableroJuego2[posicion2] == SUBMARINO || tableroJuego2[posicion2] == BARCO_BATALLA || tableroJuego2[posicion2] == PORTA_AVIONES){
+			tableroJuego2[posicion2] = ACIERTO_J2;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha acertado" << endl;
+		}else{
+			tableroJuego2[posicion2] = DISPARO_J2;
 		}
 }
 /*
  * Se lee un mensaje que llegue en un descriptor que este utilizando el servidor
  * */
 int leerMensaje(int descriptor, string &mensajeRecibido){
-	char buffer[100];
-	memset(buffer,0,100);
-	if(read(descriptor, buffer, 100) == -1){
+	char buffer[500];
+	memset(buffer,0,500);
+	if(read(descriptor, buffer, 500) == -1){
 			cout  << "TimeStamp["<<time(NULL)<<"]: Error 5 no se puede leer del descriptor" << endl;
 			return -5;
 	}
 	mensajeRecibido=buffer;
 	return 0;
 }
+
+
+
+
 /*
  * Se envia un mensaje mediante un descriptor
  * */
 void enviarMensajeUnJugador(int descriptor, string mensaje){
-	write(descriptor, mensaje.c_str(), 100);
+	write(descriptor, mensaje.c_str(), 500);
 }
 /*
  * Se envia dos mensajes distintosr dos descriptores distintos
  *  */
 void enviarMensajeDosJugadores(int descriptor1,int descriptor2, string mensaje1, string mensaje2){
-	write(descriptor1, mensaje1.c_str(), 100);
-	write(descriptor2, mensaje2.c_str(), 100);
+	write(descriptor1, mensaje1.c_str(), 500);
+	write(descriptor2, mensaje2.c_str(), 500);
 }
 /*
  *  Se envia el mismo mensaje por dos descriptores distintos
  */
 void enviarMensajeDosJugadores(int descriptor1,int descriptor2, string mensaje){
-	write(descriptor1, mensaje.c_str(), 100);
-	write(descriptor2, mensaje.c_str(), 100);
+	write(descriptor1, mensaje.c_str(), 500);
+	write(descriptor2, mensaje.c_str(), 500);
 }
 
 /*
  * Se inicializa el tablero de juego colocando aleatoriamente los globos en este.
  * 
  * */
-void inicializarTablero(vector<int> &tableroJuego){
-		vector<int>::iterator it;
-		int cantidadGlobos = 0;
-		int aleatorio;
-		for( it = tableroJuego.begin(); it != tableroJuego.end(); ++it){
-				(*it) = 0;
-		}
-		srand(time(NULL));
-		while(cantidadGlobos < 5){
-			aleatorio = numeroAleatorio();
-			if(tableroJuego[aleatorio] != GLOBO){
-				tableroJuego[aleatorio] = GLOBO;
-				cantidadGlobos++;
-			}
-		}
+
+/*
+ * Se corta un string dado un delimitador y se guarda en un vector de string
+ * 
+ * */
+void split(string s, char delim, vector<string> &elementos) {
+    stringstream ss(s);
+    string item;
+    while (std::getline(ss, item, delim)) {
+		 elementos.push_back(item);    
+    }
 }
+
+void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string mensaje1, string mensaje2){
+
+	vector<string> elementos1;
+	vector<string> elementos2;
+
+	split(mensaje1, ',', elementos1);
+	split(mensaje2, ',', elementos2);
+
+	vector<string>::iterator it;
+	int i = 0;
+	for( it = elementos1.begin(); it != elementos1.end(); ++it){
+
+			tableroJuego1[i] = atoi((*it).c_str());
+			i++;
+	}
+	i = 0;
+	for( it = elementos2.begin(); it != elementos2.end(); ++it){
+			tableroJuego2[i] = atoi((*it).c_str());
+			i++;
+	}
+
+}
+
+
+int barcoMuerto(int tableroJuego[100], int barco){
+	int count = 0;
+	for (int i = 0; i < 100 ; i ++){
+		if( tableroJuego[i] == barco) count++;
+	}
+
+	return count;
+
+}
+
 /*
  * Se crea un string el cual representa al tablero de juego que es enviado a los clientes.
  * */
-void crearStringTableroJuego(vector<int> tableroJuego, string &aux){
+void crearStringTableroJuegoPropio(int tableroJuego[100], string &aux){
 	int i;
 	aux = "";
-	for(i = 0 ; i<25;i++){
-			if(i > 9){
-				if(tableroJuego[i] == VACIO) aux.append(convertirIntToString(i+1)).append("?");
-				if(tableroJuego[i] == GLOBO) aux.append(convertirIntToString(i+1)).append("?");
-			}else{
-				if(tableroJuego[i] == VACIO) aux.append(convertirIntToString(i+1)).append("?");
-				if(tableroJuego[i] == GLOBO) aux.append(convertirIntToString(i+1)).append("?");
-			}
-			if(tableroJuego[i] == JUGADOR_1) aux.append("X?");
-			if(tableroJuego[i] == JUGADOR_2) aux.append("Y?");
-			if(tableroJuego[i] == GLOBO_REVENTADO) aux.append("O?");
-			if(tableroJuego[i] == DARDO_MISMO_LUGAR) aux.append("-?");
-			if(i==4 || i==9 ||i==14 ||i==19) aux.append("\n");
+	for(i = 0 ; i<100;i++){
+			if(tableroJuego[i] == DISPARO_J1) aux.append("X?");
+			if(tableroJuego[i] == DISPARO_J2) aux.append("X?");
+			if(tableroJuego[i] == ACIERTO_J1) aux.append("O?");
+			if(tableroJuego[i] == ACIERTO_J2) aux.append("O?");
+			if(tableroJuego[i] == BOTE_PATRULLA) aux.append("P?");
+			if(tableroJuego[i] == SUBMARINO) aux.append("S?");
+			if(tableroJuego[i] == BARCO_BATALLA) aux.append("B?");
+			if(tableroJuego[i] == DESTRUCTOR) aux.append("D?");
+			if(tableroJuego[i] == PORTA_AVIONES) aux.append("A?");
+			if(tableroJuego[i] != ACIERTO_J1 && tableroJuego[i] != ACIERTO_J2 &&  tableroJuego[i] != DISPARO_J1 && tableroJuego[i] != DISPARO_J2 && tableroJuego[i] != BOTE_PATRULLA && tableroJuego[i] != SUBMARINO && tableroJuego[i] != BARCO_BATALLA && tableroJuego[i] != DESTRUCTOR && tableroJuego[i] != PORTA_AVIONES)  aux.append(convertirIntToString(tableroJuego[i]).append("?"));
+
+			if(i==9 || i==19 ||i==29 ||i==39 || i==49 ||i==59 ||i==69 ||i==79 ||i==89) 
+				aux.append("\n");
 	}
 	aux.append("\n");
 }
+
+
+void crearStringTableroJuegoDelOtro(int tableroJuego[100], string &aux){
+	int i;
+	aux = "";
+	for(i = 0 ; i<100;i++){
+			if(tableroJuego[i] == DISPARO_J1) aux.append("X?");
+			if(tableroJuego[i] == DISPARO_J2) aux.append("X?");
+			if(tableroJuego[i] == ACIERTO_J1) aux.append("O?");
+			if(tableroJuego[i] == ACIERTO_J2) aux.append("O?");
+			if(tableroJuego[i] == BOTE_PATRULLA) aux.append(convertirIntToString(i+1)).append("?");
+			if(tableroJuego[i] == SUBMARINO) aux.append(convertirIntToString(i+1)).append("?");
+			if(tableroJuego[i] == BARCO_BATALLA) aux.append(convertirIntToString(i+1)).append("?");
+			if(tableroJuego[i] == DESTRUCTOR) aux.append(convertirIntToString(i+1)).append("?");
+			if(tableroJuego[i] == PORTA_AVIONES) aux.append(convertirIntToString(i+1)).append("?");
+			if(tableroJuego[i] != ACIERTO_J1 && tableroJuego[i] != ACIERTO_J2 &&  tableroJuego[i] != DISPARO_J1 && tableroJuego[i] != DISPARO_J2 && tableroJuego[i] != BOTE_PATRULLA && tableroJuego[i] != SUBMARINO && tableroJuego[i] != BARCO_BATALLA && tableroJuego[i] != DESTRUCTOR && tableroJuego[i] != PORTA_AVIONES)  aux.append(convertirIntToString(tableroJuego[i]).append("?"));
+
+			if(i==9 || i==19 ||i==29 ||i==39 || i==49 ||i==59 ||i==69 ||i==79 ||i==89) 
+				aux.append("\n");
+	}
+	aux.append("\n");
+}
+
 /*
  * Se convierte un entero en int
  * */
@@ -261,26 +406,34 @@ string convertirIntToString(int i){
  * Se muestra el tablero de juego como mensaje en el servidor
  * 
  * */
-void mostrarTablero(vector<int> tableroJuego){
+void mostrarTablero(int tableroJuego[100]){
 
 		unsigned int i;
 		cout << "   Tablero de Juego" << endl;
-		cout << "---------------------" << endl;
-		for(i=0;i<tableroJuego.size();i++){
-			if(tableroJuego[i] == VACIO) cout << "|   ";
-			if(tableroJuego[i] == GLOBO) cout << "| O ";
-			if(tableroJuego[i] == JUGADOR_1) cout << "| X ";
-			if(tableroJuego[i] == JUGADOR_2) cout << "| Y ";
-			if(tableroJuego[i] == GLOBO_REVENTADO) cout << "| O ";
-			if(tableroJuego[i] == DARDO_MISMO_LUGAR) cout << "| - ";
-			if(i==24) cout << "|";
-			if(i==4 || i==9 ||i==14 ||i==19) {
+		cout << "----------------------------------------------------------------" << endl;
+		for(i=0;i<100;i++){
+
+			if (i < 9){
+				if(tableroJuego[i] != BOTE_PATRULLA && tableroJuego[i] != SUBMARINO && tableroJuego[i] != BARCO_BATALLA && tableroJuego[i] != DESTRUCTOR && tableroJuego[i] != PORTA_AVIONES) cout << "|  " << tableroJuego[i] << "  ";
+			}else if (i == 99){
+				cout << "| " << tableroJuego[i] << " |";
+			}
+
+
+			else { 
+				if(tableroJuego[i] != BOTE_PATRULLA && tableroJuego[i] != SUBMARINO && tableroJuego[i] != BARCO_BATALLA && tableroJuego[i] != DESTRUCTOR && tableroJuego[i] != PORTA_AVIONES) cout << "| " << tableroJuego[i] << "  ";
+			}
+			if(tableroJuego[i] == BOTE_PATRULLA) cout << "|  P  ";
+			if(tableroJuego[i] == SUBMARINO) cout << "|  S  ";
+			if(tableroJuego[i] == BARCO_BATALLA) cout << "|  B  ";
+			if(tableroJuego[i] == DESTRUCTOR) cout << "|  D  ";
+			if(tableroJuego[i] == PORTA_AVIONES) cout << "|  A  ";
+			if(i==9 || i==19 ||i==29 ||i==39 || i==49 ||i==59 ||i==69 ||i==79 ||i==89) {
 				cout << "|"<<endl;
-				cout << "---------------------" << endl;				
+				cout << "----------------------------------------------------------------" << endl;				
 			}
 		}
-		cout << endl <<"---------------------" << endl;
-		cout << endl;
+		cout << endl <<"----------------------------------------------------------------" << endl;
 }
 
 /*
@@ -305,15 +458,16 @@ int establecer_conexion(int &descriptor, int &descriptorCliente1, int &descripto
 	//AHORA SE AVISA AL SISTEMA OPERATIVO QUE SE TIENE ABIERTO EL SOCKET Y QUE SE VA A ATENDER EL SERVICIO POR EL PUERTO DADO
 	direccion.sin_family = AF_INET;//TIPO DE CONEXION A ORDENADORES DE CUALQUIER TIPO
 	direccion.sin_port = htons(puerto);
-	direccion.sin_addr.s_addr =INADDR_ANY;//DIECCION DEL CLIENTE,,,,SE ATIENDE A CUALQUIERA
+	direccion.sin_addr.s_addr =INADDR_ANY;//DIECCION DEL CLIENTE,,,,SE 
+	 
+
+	//AHORA SE DICE AL SISTEMA QUE COMIENCE A ATENDEER LAS LLAMADAS QUE LLEGUEN, CON EL DESCRIPTOR DEL SOCKET Y EL NUMERO MAXIMO DE CLIEATIENDE A CUALQUIERA
 
 	if ( bind(descriptor, (struct sockaddr *)&direccion, sizeof (direccion)) == -1)
 	{
 		cout  << "TimeStamp["<<time(NULL)<<"]: Error 2" << endl;
 		return -2;
-	} 
-
-	//AHORA SE DICE AL SISTEMA QUE COMIENCE A ATENDEER LAS LLAMADAS QUE LLEGUEN, CON EL DESCRIPTOR DEL SOCKET Y EL NUMERO MAXIMO DE CLIENTES A ENCOLAR
+	}
 	if (listen(descriptor, 1) == -1)
 	{
 		cout  << "TimeStamp["<<time(NULL)<<"]: Error 3" << endl;
