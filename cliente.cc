@@ -28,10 +28,11 @@ void preguntarContinuaElJuego(string &);
 void mostrarMarcador(string ,int , int &, int &, int &);
 bool continuaElJuego(string ,int );
 void mostrarMensajeTriunfo(int , int , int );
+bool verificarRango(int);
+bool verificarPosicion(int, int[100],int,int);
 string posicionarBarcos();
 string colocarBarcos();
 int puerto= 5009;
-
 
 
 #define VACIO 0
@@ -148,39 +149,52 @@ string posicionarBarcos(){
 
 	int pos = 0;
 	int orientacion = 0;
+	bool posicionCorrecta = false;
+	bool rangoCorrecto = false;
+	imprimirPosicionamientoBarco(tablero);
+
+	do{
+		cout << "Ingrese la posicion inicial del barco del PORTA_AVIONES:" << endl;
+		cin >> pos;
+		rangoCorrecto = verificarRango(pos-1);
+		cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
+		cin >> orientacion;
+		posicionCorrecta = verificarPosicion(orientacion, tablero,pos-1,5);
+	}while(rangoCorrecto == false || posicionCorrecta == false);
+	if (orientacion == 1){
+		pos = pos - 1;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 10;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 10;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 10;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 10;
+		tablero[pos] = PORTA_AVIONES;
+	}else{
+		pos = pos - 1;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 1;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 1;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 1;
+		tablero[pos] = PORTA_AVIONES;
+		pos = pos + 1;
+		tablero[pos] = PORTA_AVIONES;
+	}
 
 	imprimirPosicionamientoBarco(tablero);
 
-	cout << "Ingrese la posicion inicial del barco del PORTA_AVIONES:" << endl;
-	cin >> pos;
-	cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
-	cin >> orientacion;
-	if (orientacion == 1){
-		pos = pos - 1;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 10;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 10;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 10;
-		tablero[pos] = PORTA_AVIONES;
-	}else{
-		pos = pos - 1;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 1;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 1;
-		tablero[pos] = PORTA_AVIONES;
-		pos = pos + 1;
-		tablero[pos] = PORTA_AVIONES;
-	}
-
-	imprimirPosicionamientoBarco(tablero);
-
-	cout << "Ingrese la posicion inicial del barco del BOTE_PATRULLA" << endl;
-	cin >> pos;
-	cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
-	cin >> orientacion;
+	do{
+		cout << "Ingrese la posicion inicial del barco del BOTE_PATRULLA:" << endl;
+		cin >> pos;
+		rangoCorrecto = verificarRango(pos-1);
+		cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
+		cin >> orientacion;
+	posicionCorrecta = verificarPosicion(orientacion, tablero,pos-1,2);
+	}while(rangoCorrecto == false || posicionCorrecta == false);
 	if (orientacion == 1){
 		pos = pos - 1;
 
@@ -196,10 +210,14 @@ string posicionarBarcos(){
 	}
 		imprimirPosicionamientoBarco(tablero);
 
-	cout << "Ingrese la posicion inicial del barco de DESTRUCTOR" << endl;
-	cin >> pos;
-	cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
-	cin >> orientacion;
+	do{
+		cout << "Ingrese la posicion inicial del barco del DESTRUCTOR:" << endl;
+		cin >> pos;
+		rangoCorrecto = verificarRango(pos-1);
+		cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
+		cin >> orientacion;
+		posicionCorrecta = verificarPosicion(orientacion, tablero,pos-1,3);
+	}while(rangoCorrecto == false || posicionCorrecta == false);
 	if (orientacion == 1){
 		pos = pos - 1;		
 		tablero[pos] = DESTRUCTOR;
@@ -212,15 +230,19 @@ string posicionarBarcos(){
 		tablero[pos] = DESTRUCTOR;
 		pos = pos + 1;
 		tablero[pos] = DESTRUCTOR;
-		pos = pos + 10;
+		pos = pos + 1;
 		tablero[pos] = DESTRUCTOR;
 	}
 		imprimirPosicionamientoBarco(tablero);
 
-	cout << "Ingrese la posicion inicial del barco de SUBMARINO" << endl;
-	cin >> pos;
-	cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
-	cin >> orientacion;
+	do{
+		cout << "Ingrese la posicion inicial del barco del SUBMARINO:" << endl;
+		cin >> pos;
+		rangoCorrecto = verificarRango(pos-1);
+		cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
+		cin >> orientacion;
+		posicionCorrecta = verificarPosicion(orientacion, tablero,pos-1,3);
+	}while(rangoCorrecto == false || posicionCorrecta == false);
 	if (orientacion == 1){
 		pos = pos - 1;		
 		tablero[pos] = SUBMARINO;
@@ -233,15 +255,18 @@ string posicionarBarcos(){
 		tablero[pos] = SUBMARINO;
 		pos = pos + 1;
 		tablero[pos] = SUBMARINO;
-		pos = pos + 10;
+		pos = pos + 1;
 		tablero[pos] = SUBMARINO;
 	}
 		imprimirPosicionamientoBarco(tablero);
-		cout << "Ingrese la posicion inicial del barco de BARCO_BATALLA" << endl;
-	cin >> pos;
-	
-	cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
-	cin >> orientacion;
+	do{
+		cout << "Ingrese la posicion inicial del barco del BARCO_BATALLA:" << endl;
+		cin >> pos;
+		rangoCorrecto = verificarRango(pos-1);
+		cout << "¿Horizontal o vertical?" << endl << "1.-Vertical" << endl << "2.-Horizontal" << endl << "Ingrese una opcion: ";
+		cin >> orientacion;
+		posicionCorrecta = verificarPosicion(orientacion, tablero,pos-1,4);
+	}while(rangoCorrecto == false || posicionCorrecta == false);
 	if (orientacion == 1){
 		pos = pos - 1;
 		tablero[pos] = BARCO_BATALLA;
@@ -256,9 +281,9 @@ string posicionarBarcos(){
 		tablero[pos] = BARCO_BATALLA;
 		pos = pos + 1;
 		tablero[pos] = BARCO_BATALLA;
-		pos = pos + 10;
+		pos = pos + 1;
 		tablero[pos] = BARCO_BATALLA;
-		pos = pos + 10;
+		pos = pos + 1;
 		tablero[pos] = BARCO_BATALLA;
 	}
 	return "";
@@ -268,6 +293,37 @@ string posicionarBarcos(){
  * Se encarga de determinar si el juego debe continuar dado un mensaje que contiene las respuestas de ambos jugadores y
  * muestra mensajes dependiendo de cada caso.
  * */
+bool verificarRango(int posicion){
+	if(posicion < 0 || posicion > 100){
+		cout << "Ingrese una posicion correcta" << endl;
+		return false;
+	}
+	 return true;
+}
+
+bool verificarPosicion(int orientacion, int tableroJuego[100], int posicion, int n){
+	//vertical
+	if(orientacion == 1){
+		int j = 0;
+		for (int i = 0; i < n; i++ ){
+			if (tableroJuego[posicion + j] < 0) return false; 
+			j += 10;
+		}
+		return true;
+	}
+	if(orientacion == 2){
+		int j = 0;
+		for (int i = 0; i < n; i++ ){
+			if (tableroJuego[posicion + j] < 0) return false; 
+			j += 1;
+		}
+		return true;
+	} 
+	return false;
+}
+
+
+
 bool continuaElJuego(string mensaje,int numeroJugador){
 	vector<string> elementos;
 	mensaje.erase(remove(mensaje.begin(), mensaje.end(), '\n'), mensaje.end());
