@@ -32,6 +32,8 @@ string posicionarBarcos();
 string colocarBarcos();
 int puerto= 5009;
 
+
+
 #define VACIO 0
 #define BOTE_PATRULLA -1
 #define DESTRUCTOR -2
