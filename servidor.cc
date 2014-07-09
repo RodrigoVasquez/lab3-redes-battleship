@@ -25,29 +25,19 @@ void enviarMensajeDosJugadores(int ,int , string , string );
 void enviarMensajeDosJugadores(int ,int , string );
 void crearStringTableroJuego(vector<int> , string &);
 void realizarJugada(int t1[100],int t2[100], string , string );
-void mostrarMensajeTriunfo(int , int );
 string convertirIntToString(int );
-bool quedanGlobos(vector<int> );
-int numeroAleatorio();
 void split(string s, char delim, vector<string> &elementos) ;
 void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string mensaje1, string mensaje2);
 void crearStringTableroJuegoPropio(int tableroJuego[100], string &aux);
 void crearStringTableroJuegoDelOtro(int tableroJuego[100], string &aux);
 int barcoMuerto(int tableroJuego[100], int barco);
+int hayGanador(int tableroJuego1[100], int tableroJuego2[100]);
 int puerto=5009;
 
 /*
  * Declaración de variables globales que indican los estados dentro del vector que representa el tablero
  * */
 
-#define VACIO  0
-#define JUGADOR_1  -1
-#define JUGADOR_2  -2
-#define GLOBO -3
-#define DARDO_MISMO_LUGAR -4
-#define GLOBO_REVENTADO -5
-
-#define VACIO 0
 #define BOTE_PATRULLA -1
 #define DESTRUCTOR -2
 #define SUBMARINO -3
@@ -71,7 +61,6 @@ int main(int argc,char **argv)
 	int tableroJuego2[100];
 
 	string mensajeEnviar(""), mensajeLeido, mensajeLeido1, mensajeLeido2;
-	int contadorGlobosJ1=0, contadorGlobosJ2=0;
 	bool jugando = true;
 	// Se envian los numeros de los jugadores
 	enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "1","2");
@@ -84,20 +73,7 @@ int main(int argc,char **argv)
 	mostrarTablero(tableroJuego1);
 	mostrarTablero(tableroJuego2);
 
-	int muertoBotePatrulla1;
-	int muertoDestructor1;
-	int muertoSubmarino1;
-	int muertoBarcoBatalla1;
-	int muertoPortaAviones1;
-
-	int muertoBotePatrulla2;
-	int muertoDestructor2;
-	int muertoSubmarino2;
-	int muertoBarcoBatalla2;
-	int muertoPortaAviones2;
-
-	int ganador1;
-	int ganador2;
+	int ganador;
 
 	while(jugando){
 
@@ -108,45 +84,76 @@ int main(int argc,char **argv)
 		crearStringTableroJuegoPropio(tableroJuego2, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
 
-		crearStringTableroJuegoDelOtro(tableroJuego1, mensajeEnviar);
+		crearStringTableroJuegoDelOtro(tableroJuego2, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente1, mensajeEnviar);
 
-		crearStringTableroJuegoDelOtro(tableroJuego2, mensajeEnviar);
+		crearStringTableroJuegoDelOtro(tableroJuego1, mensajeEnviar);
 		enviarMensajeUnJugador(descriptorCliente2, mensajeEnviar);
 
 		// se reciben las jugadas
-
 		leerMensaje(descriptorCliente1, mensajeLeido1);
 		leerMensaje(descriptorCliente2, mensajeLeido2);
 
 		realizarJugada(tableroJuego1,  tableroJuego2,  mensajeLeido1,  mensajeLeido2);
 
-		muertoBotePatrulla1 = barcoMuerto(tableroJuego1, BOTE_PATRULLA);
-		muertoDestructor1 = barcoMuerto(tableroJuego1, DESTRUCTOR);
-		muertoSubmarino1 = barcoMuerto(tableroJuego1, SUBMARINO);
-		muertoBarcoBatalla1 = barcoMuerto(tableroJuego1, BARCO_BATALLA);
-		muertoPortaAviones1 = barcoMuerto(tableroJuego1, PORTA_AVIONES);
+		ganador = hayGanador(tableroJuego1, tableroJuego2);
 
-		muertoBotePatrulla2 = barcoMuerto(tableroJuego2, BOTE_PATRULLA);
-		muertoDestructor2 = barcoMuerto(tableroJuego2, DESTRUCTOR);
-		muertoSubmarino2 = barcoMuerto(tableroJuego2, SUBMARINO);
-		muertoBarcoBatalla2 = barcoMuerto(tableroJuego2, BARCO_BATALLA);
-		muertoPortaAviones2 = barcoMuerto(tableroJuego2, PORTA_AVIONES);
-
-		ganador1 = muertoBotePatrulla1 + muertoDestructor1 + muertoSubmarino1 + muertoBarcoBatalla1 + muertoPortaAviones1;
-		ganador2 = muertoBotePatrulla2 + muertoDestructor2 + muertoSubmarino2 + muertoBarcoBatalla2 + muertoPortaAviones2;
-
-		if (ganador1 == 0 && ganador2 == 0){
+		if (ganador == 3){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "0");
+			leerMensaje(descriptorCliente1, mensajeLeido1);
+			leerMensaje(descriptorCliente2, mensajeLeido2);
+			// Si al menos 1 de los dos no quiere seguir jugando entonces se cambia el estado de la variable jugando
+			if(mensajeLeido1 == "2" || mensajeLeido2 == "2") {
+				jugando = false;
+				enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"0");
+			}
+			else{
+				enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"1");
+				leerMensaje(descriptorCliente1, mensajeLeido1);
+				leerMensaje(descriptorCliente2, mensajeLeido2);
+				inicializarTableros(tableroJuego1, tableroJuego2, mensajeLeido1, mensajeLeido2);
+				mostrarTablero(tableroJuego1);
+				mostrarTablero(tableroJuego2);
+			}
 			
-		}else if (ganador1 == 0){
+		}else if (ganador == 1){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "1");
+			leerMensaje(descriptorCliente1, mensajeLeido1);
+			leerMensaje(descriptorCliente2, mensajeLeido2);
+			// Si al menos 1 de los dos no quiere seguir jugando entonces se cambia el estado de la variable jugando
+			if(mensajeLeido1 == "2" || mensajeLeido2 == "2") {
+				jugando = false;
+			enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"0");
+			}
+			else{
+				enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"1");
+				leerMensaje(descriptorCliente1, mensajeLeido1);
+				leerMensaje(descriptorCliente2, mensajeLeido2);
+				inicializarTableros(tableroJuego1, tableroJuego2, mensajeLeido1, mensajeLeido2);
+				mostrarTablero(tableroJuego1);
+				mostrarTablero(tableroJuego2);
+			}
 			// 1 gana
 			
-		}else if (ganador2 == 0){
+		}else if (ganador == 2){
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "2");
 			// 2 gana
-			
+			leerMensaje(descriptorCliente1, mensajeLeido1);
+			leerMensaje(descriptorCliente2, mensajeLeido2);
+			// Si al menos 1 de los dos no quiere seguir jugando entonces se cambia el estado de la variable jugando
+			if(mensajeLeido1 == "2" || mensajeLeido2 == "2") {
+				jugando = false;
+				enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"0");
+
+			}
+			else{
+				enviarMensajeDosJugadores(descriptorCliente1,descriptorCliente2,"1");
+				leerMensaje(descriptorCliente1, mensajeLeido1);
+				leerMensaje(descriptorCliente2, mensajeLeido2);
+				inicializarTableros(tableroJuego1, tableroJuego2, mensajeLeido1, mensajeLeido2);
+				mostrarTablero(tableroJuego1);
+				mostrarTablero(tableroJuego2);
+			}
 		}else{
 			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, "3");
 		}
@@ -155,88 +162,49 @@ int main(int argc,char **argv)
 
 	}
 
-
-	/*
-
-	while(jugando){
-		
-		mostrarTablero(tableroJuego);
-		// Se envia el tablero de juego
-		crearStringTableroJuego(tableroJuego,mensajeEnviar);
-		enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, mensajeEnviar);
-
-		//leer posicion de ambos jugadores
-		leerMensaje(descriptorCliente1, mensajeLeido1);
-		leerMensaje(descriptorCliente2, mensajeLeido2);
-		
-		//Se realiza la jugada y cambian los valores
-		realizarJugada(tableroJuego,mensajeLeido1, mensajeLeido2, contadorGlobosJ1, contadorGlobosJ2);
-		mensajeEnviar = "";
-		// Si quedan no quedan globos se crea un mensaje con los valores a a los clientes y se muestra un mensaje de triunfo
-		if(quedanGlobos(tableroJuego)==false){
-			mensajeEnviar.append("1").append("?").append(convertirIntToString(contadorGlobosJ1)).append("?").append(convertirIntToString(contadorGlobosJ2));
-			mostrarMensajeTriunfo( contadorGlobosJ1,  contadorGlobosJ2);
-		}else{
-		// Se crea un mensaje con el estatus del juego hasta el momento
-			mensajeEnviar.append("0").append("?").append(convertirIntToString(contadorGlobosJ1)).append("?").append(convertirIntToString(contadorGlobosJ2));
-		}
-		// se envia el mensaje
-		enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2, mensajeEnviar);
-		
-		//Se recibe la respuesta por si los dos jugadores quieren seguir jugando.
-		if(quedanGlobos(tableroJuego) == false){
-			leerMensaje(descriptorCliente1, mensajeLeido1);
-			leerMensaje(descriptorCliente2, mensajeLeido2);
-			// Si al menos 1 de los dos no quiere seguir jugando entonces se cambia el estado de la variable jugando
-			if(mensajeLeido1 == "2" || mensajeLeido2 == "2") {
-				jugando = false;
-			}
-			mensajeEnviar = "";
-			mensajeEnviar.append(mensajeLeido1).append("?").append(mensajeLeido2);	
-			enviarMensajeDosJugadores(descriptorCliente1, descriptorCliente2,mensajeEnviar);
-			// Si reinicia el tablero y los contadores de globos reventados.
-			inicializarTablero(tableroJuego);
-			contadorGlobosJ1=0;
-			contadorGlobosJ2=0;
-			
-		}
-	}
-
-
-*/
-
 	// Se cierran los desriptores y se termina el juego.
 	close(descriptor);
 	close(descriptorCliente1);
 	close(descriptorCliente2);
 	cout << "TimeStamp["<<time(NULL) << "]: El juego ha terminado" << endl;
 }
-/*
- * Se reciben los contadores de los globos reventados de ambos jugadores y se muestra un mensaje de triunfo
- * */
-void mostrarMensajeTriunfo(int contadorGlobosJ1, int contadorGlobosJ2){
-		if(contadorGlobosJ1 == contadorGlobosJ2){
-				cout << "TimeStamp["<<time(NULL) << "]: La partida ha terminado en empate" << endl;	
-					
-		}else if(contadorGlobosJ1 > contadorGlobosJ2){
-				cout << "TimeStamp["<<time(NULL) << "]: Ha ganado el jugador N°1" << endl;	
-					
-		}else{
-				
-				cout << "TimeStamp["<<time(NULL) << "]: Ha ganado el jugador N°2" << endl;
-		}
+
+
+int hayGanador(int tableroJuego1[100], int tableroJuego2[100]){
+
+	int muertoBotePatrulla1, muertoDestructor1, muertoSubmarino1, muertoBarcoBatalla1, muertoPortaAviones1;
+	int muertoBotePatrulla2, muertoDestructor2, muertoSubmarino2, muertoBarcoBatalla2, muertoPortaAviones2;
+
+	muertoBotePatrulla1 = barcoMuerto(tableroJuego1, BOTE_PATRULLA);
+	muertoDestructor1 = barcoMuerto(tableroJuego1, DESTRUCTOR);
+	muertoSubmarino1 = barcoMuerto(tableroJuego1, SUBMARINO);
+	muertoBarcoBatalla1 = barcoMuerto(tableroJuego1, BARCO_BATALLA);
+	muertoPortaAviones1 = barcoMuerto(tableroJuego1, PORTA_AVIONES);
+
+	muertoBotePatrulla2 = barcoMuerto(tableroJuego2, BOTE_PATRULLA);
+	muertoDestructor2 = barcoMuerto(tableroJuego2, DESTRUCTOR);
+	muertoSubmarino2 = barcoMuerto(tableroJuego2, SUBMARINO);
+	muertoBarcoBatalla2 = barcoMuerto(tableroJuego2, BARCO_BATALLA);
+	muertoPortaAviones2 = barcoMuerto(tableroJuego2, PORTA_AVIONES);
+
+	int ganador2 = muertoBotePatrulla1 | muertoDestructor1 | muertoSubmarino1 | muertoBarcoBatalla1 | muertoPortaAviones1;
+	int ganador1 = muertoBotePatrulla2 | muertoDestructor2 | muertoSubmarino2 | muertoBarcoBatalla2 | muertoPortaAviones2;
+
+	if(ganador1 == 0 && ganador2 == 0){
+		return 3;
+	}
+
+	if(ganador1 == 0){
+		return 1;
+	}
+
+	if(ganador2 == 0){
+		return 2;
+	}
+
+	return 4;
 }
-/* Se recibe el tablero de juego y se retorna true o false dependiendo si quedan globos
- * 
- */
-bool quedanGlobos(vector<int> tableroJuego){
-		vector<int>::iterator it;
-		for( it = tableroJuego.begin(); it != tableroJuego.end(); ++it){
-				if ((*it) == GLOBO) 
-					return true;
-		}
-		return false;
-}
+
 
 /*
  * Se realiza una jugada se reciben las 2 posiciones que colocaron los jugadores y los contadores de globos se actualiza el 
@@ -246,17 +214,19 @@ void realizarJugada(int tableroJuego1[100], int tableroJuego2[100],  string mens
 		int posicion1 = atoi(mensajeLeido1.c_str()) - 1;
 		int posicion2 = atoi(mensajeLeido2.c_str()) - 1;
 
-		if (tableroJuego1[posicion1] == BOTE_PATRULLA || tableroJuego1[posicion1] == DESTRUCTOR || tableroJuego1[posicion1] == SUBMARINO || tableroJuego1[posicion1] == BARCO_BATALLA || tableroJuego1[posicion1] == PORTA_AVIONES){
-			tableroJuego1[posicion1] = ACIERTO_J1;
-			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha acertado" << endl;
+		if (tableroJuego1[posicion2] == BOTE_PATRULLA || tableroJuego1[posicion2] == DESTRUCTOR || tableroJuego1[posicion2] == SUBMARINO || tableroJuego1[posicion2] == BARCO_BATALLA || tableroJuego1[posicion2] == PORTA_AVIONES){
+			tableroJuego1[posicion2] = ACIERTO_J1;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha acertado en la posicion "<< posicion2 << endl;
 		}else{
-			tableroJuego1[posicion1] = DISPARO_J1;
+			tableroJuego1[posicion2] = DISPARO_J1;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°1 ha fallado en la posicion"<< posicion2 << endl;
 		}
-		if (tableroJuego2[posicion2] == BOTE_PATRULLA || tableroJuego2[posicion2] == DESTRUCTOR || tableroJuego2[posicion2] == SUBMARINO || tableroJuego2[posicion2] == BARCO_BATALLA || tableroJuego2[posicion2] == PORTA_AVIONES){
-			tableroJuego2[posicion2] = ACIERTO_J2;
-			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha acertado" << endl;
+		if (tableroJuego2[posicion1] == BOTE_PATRULLA || tableroJuego2[posicion1] == DESTRUCTOR || tableroJuego2[posicion1] == SUBMARINO || tableroJuego2[posicion1] == BARCO_BATALLA || tableroJuego2[posicion1] == PORTA_AVIONES){
+			tableroJuego2[posicion1] = ACIERTO_J2;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha acertado en la posicion"<< posicion1 << endl;
 		}else{
-			tableroJuego2[posicion2] = DISPARO_J2;
+			tableroJuego2[posicion1] = DISPARO_J2;
+			cout << "TimeStamp["<<time(NULL) << "]: El jugador N°2 ha fallado en la posicion"<< posicion1 << endl;
 		}
 }
 /*
@@ -266,16 +236,12 @@ int leerMensaje(int descriptor, string &mensajeRecibido){
 	char buffer[500];
 	memset(buffer,0,500);
 	if(read(descriptor, buffer, 500) == -1){
-			cout  << "TimeStamp["<<time(NULL)<<"]: Error 5 no se puede leer del descriptor" << endl;
+			cout  << "TimeStamp["<<time(NULL)<<"]: Error: no se puede leer del descriptor" << endl;
 			return -5;
 	}
 	mensajeRecibido=buffer;
 	return 0;
 }
-
-
-
-
 /*
  * Se envia un mensaje mediante un descriptor
  * */
@@ -296,11 +262,6 @@ void enviarMensajeDosJugadores(int descriptor1,int descriptor2, string mensaje){
 	write(descriptor1, mensaje.c_str(), 500);
 	write(descriptor2, mensaje.c_str(), 500);
 }
-
-/*
- * Se inicializa el tablero de juego colocando aleatoriamente los globos en este.
- * 
- * */
 
 /*
  * Se corta un string dado un delimitador y se guarda en un vector de string
@@ -339,13 +300,10 @@ void inicializarTableros(int tableroJuego1[100], int tableroJuego2[100], string 
 
 
 int barcoMuerto(int tableroJuego[100], int barco){
-	int count = 0;
 	for (int i = 0; i < 100 ; i ++){
-		if( tableroJuego[i] == barco) count++;
+		if( tableroJuego[i] == barco) return 1;
 	}
-
-	return count;
-
+	return 0;
 }
 
 /*
@@ -434,13 +392,6 @@ void mostrarTablero(int tableroJuego[100]){
 			}
 		}
 		cout << endl <<"----------------------------------------------------------------" << endl;
-}
-
-/*
- * Se genera un numero aleatorio de 1-25 para poder llenar el tablero
- * */
-int numeroAleatorio(){
-	return rand() % 25;
 }
 
 /*

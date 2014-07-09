@@ -22,11 +22,7 @@ void enviarMensaje(int , string );
 bool validarPosicion(string , string );
 void solicitarPosicion(string ,string &, int);
 void split(string , char , vector<string> &);
-void mostrarTableroJuego(string );
-bool hayGanador(string );
 void preguntarContinuaElJuego(string &);
-void mostrarMarcador(string ,int , int &, int &, int &);
-bool continuaElJuego(string ,int );
 void mostrarMensajeTriunfo(int , int , int );
 void mostrarTableroJuegoPropio(string tableroJuego);
 void mostrarTableroJuegoDelOtro(string tableroJuego);
@@ -36,7 +32,6 @@ bool verificarRango(int);
 bool verificarPosicion(int, int[100],int,int);
 int puerto= 5009;
 
-#define VACIO 0
 #define BOTE_PATRULLA -1
 #define DESTRUCTOR -2
 #define SUBMARINO -3
@@ -53,20 +48,21 @@ int main(int argc,char **argv)
 	string mensajeLeido, mensajeEnviar, tableroPropio, tableroDelOtro;
 	
 	//Se lee que numero de jugador es asignado
-	cout << "Mensaje: Esperando la conexion de otro jugador..." << endl;
+	cout << "Esperando la conexion de otro jugador..." << endl;
 	leerMensaje(descriptor, mensajeLeido);
 	
-	cout << "Mensaje: Usted es el jugador N°"<< mensajeLeido << endl << endl;
+	cout << "Usted es el jugador N°"<< mensajeLeido << endl << endl;
 	// Se obtiene el numero del jugador que el servidor ha asignado
 	int numeroJugador = atoi(mensajeLeido.c_str());
 
 	mensajeEnviar = posicionarBarcos();
+	cout << "Esperando que el otro jugador posicione sus barcos...";
 
 	enviarMensaje(descriptor, mensajeEnviar);
 
 	// variables para organizar el juego
 	bool jugando = true;
-	int ganador, contGlobos1 = 0, contGlobos2 = 0;
+	int ganador;
 	//ciclo de juego
 	while(jugando){
 		leerMensaje(descriptor, mensajeLeido);
@@ -79,75 +75,70 @@ int main(int argc,char **argv)
 
 		//Se lee el tablero en juego
 		solicitarPosicion(tableroDelOtro, mensajeEnviar, numeroJugador);
-		cout << "Mensaje: Esperando que otro jugador realice su jugada" << endl;
+		cout << "Esperando que otro jugador realice su jugada" << endl;
 		enviarMensaje(descriptor, mensajeEnviar);
 
 		// leer si alguien ha ganado
 		leerMensaje(descriptor, mensajeLeido);
 		ganador = atoi(mensajeLeido.c_str());
+
 		if(ganador == 0){
 
-			cout << "es un empate" << endl;
+			cout << "La partida termino en un empate" << endl;
+			preguntarContinuaElJuego(mensajeEnviar);
+			enviarMensaje(descriptor, mensajeEnviar);
+			leerMensaje(descriptor,mensajeLeido);
+			if(atoi(mensajeLeido.c_str()) == 0 ){
+				jugando = false;
+			}
+			else{
+
+				mensajeEnviar = posicionarBarcos();
+				enviarMensaje(descriptor, mensajeEnviar);
+			}
 
 		}else if(ganador == 1){
 
 			if (ganador == numeroJugador){
-				cout << "ganaste" << endl;
+				cout << "Eres el Ganador de la partida!!! " << endl;
 			}else{
-				cout << "perdiste" << endl;
+				cout << "Eres el perdedor de la partida :c" << endl;
+			}
+			preguntarContinuaElJuego(mensajeEnviar);
+			enviarMensaje(descriptor, mensajeEnviar);
+			leerMensaje(descriptor,mensajeLeido);
+			if(atoi(mensajeLeido.c_str()) == 0 ){
+				jugando = false;
+			}
+			else{
+
+				mensajeEnviar = posicionarBarcos();
+				enviarMensaje(descriptor, mensajeEnviar);
 			}
 
 
 		}else if(ganador == 2){
 			if (ganador == numeroJugador){
-				cout << "ganaste" << endl;
+				cout << "Eres el ganador de la partida!!!" << endl;
 			}else{
-				cout << "perdiste" << endl;
+				cout << "Eres el perdedor de la partida :c" << endl;
+			}
+			preguntarContinuaElJuego(mensajeEnviar);
+			enviarMensaje(descriptor, mensajeEnviar);
+			leerMensaje(descriptor,mensajeLeido);
+			if(atoi(mensajeLeido.c_str()) == 0 ){
+				jugando = false;
+			}
+			else{
+
+				mensajeEnviar = posicionarBarcos();
+				enviarMensaje(descriptor, mensajeEnviar);
 			}
 		}
 
 	}
-
-
-
-
-		/*
-		tableroJuego = mensajeLeido;
-		//se muestra el tablero de juego
-		mostrarTableroJuego(mensajeLeido);
-		
-		//enviar posicion de jugada
-		solicitarPosicion(tableroJuego,mensajeEnviar, numeroJugador);
-		cout << "Mensaje: Esperando que otro jugador realice su jugada" << endl;
-		enviarMensaje(descriptor, mensajeEnviar);
-		
-		//Leer mensaje ganador
-		leerMensaje(descriptor,mensajeLeido);
-		// se muestra el marcador de juego
-		mostrarMarcador(mensajeLeido,numeroJugador,contGlobos1, contGlobos2, ganador);
-		// Si hay un ganador se muestra los mensajes de triungo y se pregunta si se quiere seguir jugando
-		if(ganador==1){
-			// Se muestra el mensaje de triunfo
-			mostrarMensajeTriunfo(numeroJugador, contGlobos1, contGlobos2);
-			// se pregunta si se quiere continuar el juego
-			preguntarContinuaElJuego(mensajeEnviar);
-			
-			// Enviar mensaje por si continua el juego
-			enviarMensaje(descriptor, mensajeEnviar);
-			
-			cout << "Mensaje: Esperando que otro jugador envie su respuesta" << endl;
-			// Se lee un mensaje del jugador 
-			leerMensaje(descriptor, mensajeLeido);
-			//Se actualiza el valor de lavariable jugando dependiendo si ambos jugadores desea seguir jugando
-			jugando = continuaElJuego(mensajeLeido, numeroJugador);
-			// Se reinicia los cont de globos
-			contGlobos1 = 0;
-			contGlobos2 = 0;
-		}
-	}
-	cout << "Mensaje: El juego ha terminado" << endl;
 	// Se cierra el descriptor de comunicación con el servidor
-	*/
+	
 	close(descriptor); 
 
 }
@@ -198,7 +189,9 @@ bool verificarPosicion(int orientacion, int tableroJuego[100], int posicion, int
 	if(orientacion == 1){
 		int j = 0;
 		for (int i = 0; i < n; i++ ){
-			if (tableroJuego[posicion + j] < 0) return false; 
+			if (tableroJuego[posicion + j] < 0) 
+				
+				return false; 
 			j += 10;
 		}
 		return true;
@@ -371,80 +364,6 @@ string posicionarBarcos(){
 }
 
 /*
- * Se encarga de determinar si el juego debe continuar dado un mensaje que contiene las respuestas de ambos jugadores y
- * muestra mensajes dependiendo de cada caso.
- * */
-bool continuaElJuego(string mensaje,int numeroJugador){
-	vector<string> elementos;
-	mensaje.erase(remove(mensaje.begin(), mensaje.end(), '\n'), mensaje.end());
-	split(mensaje,'?', elementos);
-	
-	int respuesta1 = atoi(elementos[0].c_str());
-	int respuesta2 = atoi(elementos[1].c_str());
-	
-	if(numeroJugador==1){
-		if(respuesta1 == 1 && respuesta2 == 2){
-			cout << "Mensaje: El jugador N°2 no desea seguir jugando :(" << endl;
-			return false;
-			
-		}else if(respuesta1 == 2 && respuesta2 == 2){
-			cout << "Mensaje: Ninguno quiere volver a jugar:(" << endl;
-			return false;
-			
-		}else if(respuesta1 == 2 && respuesta2 ==1){
-			cout << "Mensaje: El jugador N°2 queria seguir jugando:(" << endl;
-			return false;
-		
-		}else{
-			cout << "Mensaje: Comienza una nueva partida" << endl;
-			return true;
-			
-		}
-	}else{
-		if(respuesta1 == 1 && respuesta2 == 2){
-			
-			cout << "Mensaje: El jugador N°1 queria seguir jugando:(" << endl;
-			return false;
-			
-		}else if(respuesta1 == 2 && respuesta2 == 2){
-			cout << "Mensaje: Ninguno quiere volver a jugar:(" << endl;
-			return false;
-			
-		}else if(respuesta1 == 2 && respuesta2 ==1){
-			cout << "Mensaje: El jugador N°1 no desea seguir jugando :(" << endl;
-			return false;
-		
-		}else{
-			return true;
-			
-		}
-	}		
-}
-
-/*
- * Se muestra un mensaje de triunfo dependiento del numero de jugador y los cont de globos de cada jugador.
- * */
-void mostrarMensajeTriunfo(int numeroJugador, int contGlobos1, int contGlobos2){
-	if(numeroJugador == 1){
-		if(contGlobos1 == contGlobos2){
-			cout << "Mensaje: Es un empate :)!!!!" << endl;
-		}
-		else if (contGlobos1 > contGlobos2)
-			cout << "Mensaje: Haz ganado :)!!!!" << endl;
-		else
-			cout << "Mensaje: Haz perdido :(" <<endl;
-	}else{
-		if(contGlobos1 == contGlobos2){
-			cout << "Mensaje: Es un empate :)!!!!" << endl;
-		}
-		else if (contGlobos1 > contGlobos2)
-			cout << "Mensaje: Haz perdido :)!!!!" << endl;
-		else
-			cout << "Mensaje: Haz ganado :(" << endl;
-
-	}
-}
-/*
  * Se encarga de obtener los mensajes de cada jugador respecto a si quieren que el juego continue
  * */
 void preguntarContinuaElJuego(string &opcion){
@@ -458,56 +377,8 @@ void preguntarContinuaElJuego(string &opcion){
 	}while(1);
 }
 
-/*
- * Se encarga de mostrar el marcador de juego dado el mensaje que contiene informacion recibida del servidor
- * */
-void mostrarMarcador(string marcador,int numeroJugador, int &contGlobos1, int &contGlobos2, int &ganador){
-	vector<string> elementos;
-	marcador.erase(remove(marcador.begin(), marcador.end(), '\n'), marcador.end());
-	split(marcador,'?', elementos);
-	
-	int contGlobos1Ant = contGlobos1;
-	int contGlobos2Ant = contGlobos2;
-	contGlobos1 = atoi(elementos[1].c_str());
-	contGlobos2 = atoi(elementos[2].c_str());
-	
-	if(numeroJugador == 1){
-		if (contGlobos1 > contGlobos1Ant)
-			cout << "Mensaje: Haz acertado a un globo :)!!!!" << endl;
-		else
-			cout << "Mensaje: Haz Fallado :(" << endl;
-		if(contGlobos2 > contGlobos2Ant)
-			cout << "Mensaje: El jugador N°2 ha reventado un globo"<< endl;
-		else 
-			cout << "Mensaje: El jugador N°2 ha fallado"<< endl;
-	}else{
-		if (contGlobos2 > contGlobos2Ant)
-			cout << "Mensaje: Haz acertado a un globo :)!!!!"<< endl;
-		else
-			cout << "Mensaje: Haz Fallado :("<< endl;
-		if(contGlobos1 > contGlobos1Ant)
-			cout << "Mensaje: El jugador N°1 ha reventado un globo"<< endl;
-		else 
-			cout << "Mensaje: El jugador N°1 ha fallado"<< endl;
-	}
-	cout << endl;
-	cout << "::::::::::::::::::::::::::" << endl;
-	cout << ":        MARCADOR        :" << endl;
-	cout << ":      Jugador N°1 =" << contGlobos1 << "    :" << endl;
-	cout << ":      Jugador N°2 =" << contGlobos2 << "    :" << endl;
-	cout << "::::::::::::::::::::::::::" << endl;
-	
-	ganador =  atoi(elementos[0].c_str());
-	
-}
-/*
- * Se encarga de determinar si hay un ganador
- * */
-bool hayGanador(int ganador){
-	if(ganador == 0) 
-		return false;
-	return true;
-}
+
+
 /*
  * Se lee un mensaje del descriptor y se guarda en un string
  * */
@@ -571,32 +442,6 @@ void split(string s, char delim, vector<string> &elementos) {
 		 elementos.push_back(item);    
     }
 }
-/*
- * Se muestra el tablero de juego y su estado dado uyn mensaje recibido desde el servidor con un formato determinado
- * */
-void mostrarTableroJuego(string tableroJuego){
-	vector<string> elementos;
-	tableroJuego.erase(remove(tableroJuego.begin(), tableroJuego.end(), '\n'), tableroJuego.end());
-	split(tableroJuego, '?', elementos);
-	unsigned int i;
-	cout << "    Tablero de Juego" << endl;
-	cout << "--------------------------" << endl;
-	for(i=0;i<elementos.size();i++){
-			if(i<9|| elementos[i]=="Y" || elementos[i]=="X" || elementos[i]=="O" || elementos[i]=="-")
-				cout <<"| " <<elementos[i] <<"  ";
-			else
-				cout <<"| " <<elementos[i] <<" ";
-			if(i==24) cout << "|";
-			if(i==4 || i==9 ||i==14 ||i==19) {
-				cout << "|"<<endl;
-				cout << "--------------------------" << endl;
-				
-			}
-	}
-	cout << endl <<"--------------------------" << endl;
-	cout << endl;
-}
-
 
 void mostrarTableroJuegoPropio(string tableroJuego){
 	vector<string> elementos;
